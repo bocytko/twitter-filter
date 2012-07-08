@@ -1,0 +1,43 @@
+apply plugin: 'checkstyle'
+apply plugin: 'codenarc'
+apply plugin: 'eclipse'
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+repositories {
+    mavenCentral()
+}
+
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        version '0.5.1'
+        groupId 'twitter.filter'
+        artifactId 'twitter-filter-core'
+        inceptionYear '2012'
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: 'file://~/.m2/')
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0'
+}
+
+codenarc {
+    reportFormat = 'xml'
+}
+
+dependencies {
+    groovy 'org.codehaus.groovy:groovy:1.8.6'
+    compile 'org.codehaus.gpars:gpars:0.12'
+    compile 'joda-time:joda-time:2.0'
+    compile 'log4j:log4j:1.2.16'
+    compile 'redis.clients:jedis:2.0.0'
+    testCompile 'junit:junit:4.8.2'
+}
