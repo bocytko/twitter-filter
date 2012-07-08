@@ -20,7 +20,7 @@ class TweetConsumerTest {
     @Before
     void before() {
         def filterStrategies = [
-            new BlacklistedUserStrategy(['d8Pit']),
+            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC']),
             new DuplicateUrlStrategy(tweetStore, urlCache),
             new LevenshteinDistanceStrategy(tweetStore)
         ]

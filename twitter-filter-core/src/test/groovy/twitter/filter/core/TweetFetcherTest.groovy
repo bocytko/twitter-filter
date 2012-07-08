@@ -60,7 +60,7 @@ class TweetFetcherTest {
 
         // when
         def filterStrategies = [
-            new BlacklistedUserStrategy(['d8Pit']),
+            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC']),
             new DuplicateUrlStrategy(tweetStore, urlCache),
             // new DuplicateTweetStrategy(tweetStore),
             new LevenshteinDistanceStrategy(tweetStore)
