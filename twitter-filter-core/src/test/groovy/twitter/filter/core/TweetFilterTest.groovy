@@ -53,7 +53,7 @@ class TweetFilterTest {
         ITweetStore tweetStore = new RedisTweetStore(jedis, query)
 
         def filterStrategies = [
-            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC']),
+            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny']),
             new DuplicateUrlStrategy(tweetStore, urlCache),
             new LevenshteinDistanceStrategy(tweetStore)
         ]

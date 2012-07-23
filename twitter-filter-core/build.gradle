@@ -10,7 +10,7 @@ repositories {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
-        version '0.5.1'
+        version '0.5.2'
         groupId 'twitter.filter'
         artifactId 'twitter-filter-core'
         inceptionYear '2012'

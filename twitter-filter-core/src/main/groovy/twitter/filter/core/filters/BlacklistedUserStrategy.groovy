@@ -11,6 +11,9 @@ class BlacklistedUserStrategy implements FilterStrategy {
     
     @Override
     def apply(Tweet tweet) {
-        tweet.from_user in blacklistedUsers
+        boolean tweetFromBlacklistedUser = tweet.from_user in blacklistedUsers
+        boolean tweetContainsBlacklistedUserMention = blacklistedUsers.collect { tweet.text.contains("@${it}") }.find { it == true }
+        
+        return tweetFromBlacklistedUser || tweetContainsBlacklistedUserMention
     }
 }
