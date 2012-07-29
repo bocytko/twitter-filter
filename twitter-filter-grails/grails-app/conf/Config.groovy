@@ -70,7 +70,7 @@ environments {
     }
 }
 
-filter.ignoredUsers = ['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny']
+filter.ignoredUsers = ['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny', 'buffallboy']
 filter.queries = ['#hadoop', '#hbase']
 filter.numThreads = 10
 filter.pagesToFetch = 2
@@ -85,7 +85,7 @@ log4j = {
     //}
 
     info   'twitter.filter.core'
-    
+
     error  'org.codehaus.groovy.grails.web.servlet',  //  controllers
            'org.codehaus.groovy.grails.web.pages', //  GSP
            'org.codehaus.groovy.grails.web.sitemesh', //  layouts

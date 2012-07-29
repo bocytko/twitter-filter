@@ -64,6 +64,7 @@
         
         <div class="footer" role="contentinfo">
             <g:link class="g-button" controller="filter" action="stats">Datastore stats</g:link>
+            <g:link class="g-button" controller="filter" action="configure">Configuration</g:link>
         </div>
         
         <div id="spinner" class="spinner" style="display:none;"><g:message code="spinner.alt" default="Loading&hellip;"/></div>
