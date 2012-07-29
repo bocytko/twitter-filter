@@ -4,6 +4,7 @@ import redis.clients.jedis.Jedis
 
 class FilterController {
 
+    ConfigurationService configurationService
     FilterService filterService
     def redisService
 
@@ -52,24 +53,24 @@ class FilterController {
         render(view: "stats", model: [queries: queries, stats: datastoreStats])
     }
 
-    def configure() {
+    def config() {
         def ignoredUsers = ""
 
         redisService.withRedis { Jedis jedis ->
-            ignoredUsers = filterService.getIgnoredUsers(jedis).join(",")
+            ignoredUsers = configurationService.getIgnoredUsers(jedis).join(",")
         }
 
-        render(view: "configure", model: [ignoredUsers: ignoredUsers])
+        render(view: "config", model: [ignoredUsers: ignoredUsers])
     }
 
     def updateConfiguration() {
         def ignoredUsers = params.ignoredUsers.split(",").collect { it.trim() }
 
         redisService.withRedis { Jedis jedis ->
-            filterService.setIgnoredUsers(jedis, ignoredUsers)
+            configurationService.setIgnoredUsers(jedis, ignoredUsers)
         }
 
-        redirect(action: "configure")
+        redirect(action: "config")
     }
 
     def clear() {

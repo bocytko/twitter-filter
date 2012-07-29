@@ -16,15 +16,14 @@ import redis.clients.jedis.Jedis
 
 class FilterService {
 
-    static final String CONFIG_IGNORED_USERS = "config:ignoredUsers"
-    def grailsApplication
+    ConfigurationService configurationService
 
     int filterTweets(Jedis jedis, def query) {
         UrlCache urlCache = new RedisUrlCache(jedis)
         ITweetStore tweetStore = new RedisTweetStore(jedis, query)
 
         def filterStrategies = [
-            new BlacklistedUserStrategy(getIgnoredUsers(jedis)),
+            new BlacklistedUserStrategy(configurationService.getIgnoredUsers(jedis)),
             new DuplicateUrlStrategy(tweetStore, urlCache),
             new LevenshteinDistanceStrategy(tweetStore)
         ]
@@ -33,13 +32,13 @@ class FilterService {
 
         TweetConsumer consumer = new TweetConsumer().withTweetStore(tweetStore)
                                                     .withUrlCache(urlCache)
-                                                    .withThreads(grailsApplication.config.filter.numThreads)
+                                                    .withThreads(configurationService.getNumberOfThreads())
                                                     .withFilterStrategies(filterStrategies)
                                                     .withProgressReporter(progressReporter)
 
         TweetFilter tweetFilter = new TweetFilter().withTweetConsumer(consumer)
 
-        int newlyAddedTweets = tweetFilter.doFilter(query, grailsApplication.config.filter.pagesToFetch)
+        int newlyAddedTweets = tweetFilter.doFilter(query, configurationService.getPagesToFetch())
 
         newlyAddedTweets
     }
@@ -89,31 +88,5 @@ class FilterService {
         tweetStore.clear()
 
         // TODO: clear all cached urls from RedisUrlCache
-    }
-
-    def getIgnoredUsers(Jedis jedis) {
-        Set<String> ignoredUsers = jedis.smembers(CONFIG_IGNORED_USERS)
-
-        if (!ignoredUsers || ignoredUsers.isEmpty()) {
-            ignoredUsers = grailsApplication.config.filter.ignoredUsers
-        }
-
-        ignoredUsers
-    }
-
-    void setIgnoredUsers(Jedis jedis, Collection<String> ignoredUsers) {
-        removeAllValuesFromSet(jedis, CONFIG_IGNORED_USERS)
-
-        ignoredUsers.each {
-            jedis.sadd(CONFIG_IGNORED_USERS, it)
-        }
-    }
-
-    private void removeAllValuesFromSet(Jedis jedis, String key) {
-        def setValues = jedis.smembers(key)
-
-        setValues.each {
-            jedis.srem(key, it)
-        }
     }
 }
