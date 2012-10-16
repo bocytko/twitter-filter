@@ -64,10 +64,12 @@ class FilterController {
     }
 
     def updateConfiguration() {
+        def hashtags = grailsApplication.config.filter.queries
         def ignoredUsers = params.ignoredUsers.split(",").collect { it.trim() }
 
         redisService.withRedis { Jedis jedis ->
             configurationService.setIgnoredUsers(jedis, ignoredUsers)
+            filterService.removeTweetsFromIgnoredUsers(jedis, hashtags, ignoredUsers)
         }
 
         redirect(action: "config")

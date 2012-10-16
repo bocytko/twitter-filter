@@ -1,5 +1,6 @@
 package twitter.filter
 
+import twitter.filter.core.Tweet
 import twitter.filter.core.TweetConsumer
 import twitter.filter.core.TweetFilter
 import twitter.filter.core.filters.BlacklistedUserStrategy
@@ -80,6 +81,18 @@ class FilterService {
         }
 
         stats
+    }
+
+    void removeTweetsFromIgnoredUsers(Jedis jedis, def hashtags, def ignoredUsers) {
+        removeTweets(jedis, hashtags, { Tweet t -> ignoredUsers.contains(t.from_user) })
+    }
+
+    void removeTweets(Jedis jedis, def hashtags, Closure c) {
+        hashtags.each {
+            ITweetStore tweetStore = new RedisTweetStore(jedis, it)
+
+            tweetStore.removeTweets(c)
+        }
     }
 
     void clearStoredTweetsAndUrlCache(Jedis jedis, def query) {

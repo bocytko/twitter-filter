@@ -54,8 +54,8 @@
 	          </g:each>
           </div>
           
-          <span id="progress" style="font-size:0.5em;color:#FFF;padding:0 0 0 1em"></span>
-          <span id="fetch-result" style="font-size:0.5em;color:#FFF;padding:0 0 0 1em"></span>
+          <span id="progress" style="font-size:10px;color:#FFF;padding:0 0 0 1em"></span>
+          <span id="fetch-result" style="font-size:10px;color:#FFF;padding:0 0 0 1em"></span>
         </div>
         
         <div id="layout" style="padding: 5pt">
