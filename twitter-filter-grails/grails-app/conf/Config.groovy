@@ -70,8 +70,8 @@ environments {
     }
 }
 
-filter.ignoredUsers = ['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny', 'buffallboy',
-                       'bsspunit1', 'iOfBoroPark', 'Looking4Action']
+filter.ignoredUsers = ['fpayande','Hatzolah_NYC','68raser','HBaselog','Looking4Action','iOfBoroPark','iOfFlatbush','FariPayandeh','HatzolahNYC','bsspunit1','ShomrimHatzny','d8Pit','buffallboy','hatzolahbssp']
+
 filter.queries = ['#hadoop', '#hbase']
 filter.numThreads = 10
 filter.pagesToFetch = 2
