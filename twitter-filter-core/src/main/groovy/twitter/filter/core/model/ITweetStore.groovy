@@ -15,5 +15,7 @@ interface ITweetStore {
 
     def getNumberOfKnownUrls()
 
+    def removeTweets(Closure condition)
+
     void clear()
 }

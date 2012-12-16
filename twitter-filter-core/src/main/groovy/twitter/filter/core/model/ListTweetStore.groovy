@@ -17,6 +17,11 @@ class ListTweetStore implements ITweetStore {
     }
 
     @Override
+    def removeTweets(Closure condition) {
+        storedTweets.removeAll(condition)
+    }
+
+    @Override
     def addToKnownUrls(def urlChain) {
         knownUrls = knownUrls + urlChain
 

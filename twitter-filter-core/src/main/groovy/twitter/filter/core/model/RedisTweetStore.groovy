@@ -43,6 +43,15 @@ class RedisTweetStore implements ITweetStore {
     }
 
     @Override
+    def removeTweets(Closure condition) {
+        def storedTweets = getStoredTweets()
+        storedTweets.removeAll(condition)
+
+        clear()
+        storedTweets.each { storeTweet(it) }
+    }
+
+    @Override
     def addToKnownUrls(def urlChain) {
         urlChain.each {
             jedis.rpush(knownUrlsKey, it)

@@ -4,6 +4,7 @@ import org.junit.Before
 import org.junit.Test
 
 import twitter.filter.core.filters.BlacklistedUserStrategy
+import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
 import twitter.filter.core.filters.LevenshteinDistanceStrategy
 import twitter.filter.core.model.IProgressReporter
@@ -22,6 +23,7 @@ class TweetConsumerTest {
         def filterStrategies = [
             new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny']),
             new DuplicateUrlStrategy(tweetStore, urlCache),
+            // new DuplicateTweetStrategy(tweetStore)
             new LevenshteinDistanceStrategy(tweetStore)
         ]
 
@@ -206,22 +208,22 @@ class TweetConsumerTest {
             tweet
         ]
     }
-    
+
     @Test
     void shouldIgnoreTweetsContainingBlacklistedUserMentions() {
         Tweet tweetFromBlacklistedUser = TweetFactory.createFromText("Blacklisted user")
         tweetFromBlacklistedUser.from_user = "ShomrimHatzny"
-        
+
         Tweet tweetToBlacklistedUser = TweetFactory.createFromText("Blacklisted user mention @ShomrimHatzny")
-        
+
         Tweet tweet = TweetFactory.createFromText("OK")
-        
+
         def tweets = [
             tweetFromBlacklistedUser,
             tweetToBlacklistedUser,
             tweet
         ]
-        
+
         assert consumer.consume(tweets) == 1
         assert consumer.getTweets() == [
             tweet

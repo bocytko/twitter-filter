@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
+import twitter.filter.core.Tweet
 import twitter.filter.core.TweetFactory
 import redis.clients.jedis.Jedis
 
@@ -69,6 +70,29 @@ class RedisTweetStoreTest {
 
         assert tweets == storedTweets
         assert 2 == tweetStore.getNumberOfStoredTweets()
+    }
+
+    @Test
+    void shouldRemoveTweetsMatchingCondition() {
+        // given
+        def twitterJsonTweets = getTweetsFromTwitterJsonText()
+        def tweetText = [
+            twitterJsonTweets.results[15],
+            twitterJsonTweets.results[16]
+        ]
+
+        def tweets = tweetText.collect { TweetFactory.createFromTwitterJson(it) }
+        tweets.each { tweetStore.storeTweet(it) }
+
+        // when
+        def selector = { Tweet t -> t.from_user == "Edgar_Villegas" }
+        tweetStore.removeTweets(selector)
+
+        // then
+        def storedTweets = tweetStore.getStoredTweets()
+
+        assert [tweets[0]] == storedTweets
+        assert 1 == tweetStore.getNumberOfStoredTweets()
     }
 
     @Test

@@ -4,6 +4,7 @@ import twitter.filter.core.Tweet
 import twitter.filter.core.TweetConsumer
 import twitter.filter.core.TweetFilter
 import twitter.filter.core.filters.BlacklistedUserStrategy
+import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
 import twitter.filter.core.filters.LevenshteinDistanceStrategy
 import twitter.filter.core.model.IProgressReporter
@@ -26,7 +27,8 @@ class FilterService {
         def filterStrategies = [
             new BlacklistedUserStrategy(configurationService.getIgnoredUsers(jedis)),
             new DuplicateUrlStrategy(tweetStore, urlCache),
-            new LevenshteinDistanceStrategy(tweetStore)
+            new DuplicateTweetStrategy(tweetStore)
+//            new LevenshteinDistanceStrategy(tweetStore)
         ]
 
         IProgressReporter progressReporter = new RedisProgressReporter(jedis, query)

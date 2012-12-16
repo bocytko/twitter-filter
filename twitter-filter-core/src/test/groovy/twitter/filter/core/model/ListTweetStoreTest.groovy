@@ -25,6 +25,27 @@ class ListTweetStoreTest {
     }
 
     @Test
+    void canRemoveTweetsMatchingCondition() {
+        // given
+        Tweet first = TweetFactory.createFromText("first")
+        Tweet second = TweetFactory.createFromText("second")
+        ITweetStore store = new ListTweetStore()
+
+        store.storeTweet(first)
+        store.storeTweet(first)
+        store.storeTweet(second)
+
+        // when
+        def tweetWithTextSecond = { Tweet t -> t.text == "second" }
+        store.removeTweets(tweetWithTextSecond)
+
+        // then
+        assert store.storedTweets.size() == 2
+        assert store.storedTweets == [first, first]
+        assert store.numberOfStoredTweets == 2
+    }
+
+    @Test
     void canAddAndRetrieveKnownUrls() {
         // given
         def urlChain = ["A", "B", "C"]
