@@ -5,10 +5,10 @@ import java.util.Collection;
 import redis.clients.jedis.Jedis;
 
 class ConfigurationService {
-    def grailsApplication
-
     private static final String CONFIG_HASHTAGS = "config:hashtags"
     private static final String CONFIG_IGNORED_USERS = "config:ignoredUsers"
+
+    def grailsApplication
 
     def getNumberOfThreads() {
         grailsApplication.config.filter.numThreads
@@ -27,38 +27,38 @@ class ConfigurationService {
     }
 
     def getHashTags(Jedis jedis) {
-        Set<String> hashTags = jedis.smembers(CONFIG_HASHTAGS)
-
-        if (!hashTags || hashTags.isEmpty()) {
-            hashTags = getDefaultHashTags()
-        }
-
-        hashTags
-    }
-
-    void setHashTags(Jedis jedis, Collection<String> hashTags) {
-        removeAllValuesFromSet(jedis, CONFIG_HASHTAGS)
-
-        hashTags.each {
-            jedis.sadd(CONFIG_HASHTAGS, it)
-        }
+        getConfigValueWithDefault(jedis, CONFIG_HASHTAGS, getDefaultHashTags())
     }
 
     def getIgnoredUsers(Jedis jedis) {
-        Set<String> ignoredUsers = jedis.smembers(CONFIG_IGNORED_USERS)
+        getConfigValueWithDefault(jedis, CONFIG_IGNORED_USERS, getDefaultIgnoredUsers())
+    }
 
-        if (!ignoredUsers || ignoredUsers.isEmpty()) {
-            ignoredUsers = getDefaultIgnoredUsers()
+    private def getConfigValueWithDefault(Jedis jedis, String key, def defaultValue) {
+        Set<String> configValue = jedis.smembers(key)
+
+        if (!configValue || configValue.isEmpty()) {
+            configValue = defaultValue
         }
 
-        ignoredUsers
+        configValue
+    }
+
+    void setHashTags(Jedis jedis, Collection<String> hashTags) {
+        setConfigValuesFor(jedis, CONFIG_HASHTAGS, hashTags)
     }
 
     void setIgnoredUsers(Jedis jedis, Collection<String> ignoredUsers) {
-        removeAllValuesFromSet(jedis, CONFIG_IGNORED_USERS)
+        setConfigValuesFor(jedis, CONFIG_IGNORED_USERS, ignoredUsers)
+    }
 
-        ignoredUsers.each {
-            jedis.sadd(CONFIG_IGNORED_USERS, it)
+    private void setConfigValuesFor(Jedis jedis, String key, Collection<String> values) {
+        removeAllValuesFromSet(jedis, key)
+
+        print "Setting $key to $values"
+
+        values.each {
+            jedis.sadd(key, it)
         }
     }
 
