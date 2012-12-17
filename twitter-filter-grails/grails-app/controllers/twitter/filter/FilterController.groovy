@@ -10,23 +10,24 @@ class FilterController {
 
     def index() {
         def tweets = []
+        def hashTag = params.hashTag
 
-        if (null == params.query) {
-            params.query = grailsApplication.config.filter.queries[0]
+        if (null == hashTag) {
+            hashTag = allHashTags[0]
         }
 
         redisService.withRedis { Jedis jedis ->
-            tweets = filterService.getLastNTweets(jedis, params.query, 100)
+            tweets = filterService.getLastNTweets(jedis, hashTag, 100)
         }
 
-        render(view: "index", model: [tweets: tweets])
+        render(view: "index", model: [tweets: tweets, allHashTags: allHashTags, hashTag: hashTag])
     }
 
     def filter() {
         int numAddedTweets = 0
 
         redisService.withRedis { Jedis jedis ->
-            numAddedTweets = filterService.filterTweets(jedis, params.query)
+            numAddedTweets = filterService.filterTweets(jedis, params.hashTag)
         }
 
         render "Newly added tweets: ${numAddedTweets}"
@@ -36,7 +37,7 @@ class FilterController {
         def progressInfo = ""
 
         redisService.withRedis { Jedis jedis ->
-            progressInfo = filterService.getProgress(jedis, params.query)
+            progressInfo = filterService.getProgress(jedis, params.hashTag)
         }
 
         render progressInfo
@@ -44,32 +45,46 @@ class FilterController {
 
     def stats() {
         def datastoreStats
-        def queries = grailsApplication.config.filter.queries
 
         redisService.withRedis { Jedis jedis ->
-            datastoreStats = filterService.getDatastoreStats(jedis, queries)
+            datastoreStats = filterService.getDatastoreStats(jedis, allHashTags)
         }
 
-        render(view: "stats", model: [queries: queries, stats: datastoreStats])
+        render(view: "stats", model: [ allHashTags: allHashTags, stats: datastoreStats])
     }
 
     def config() {
+        def hashTags = ""
         def ignoredUsers = ""
 
         redisService.withRedis { Jedis jedis ->
+            hashTags = allHashTags.join(",")
             ignoredUsers = configurationService.getIgnoredUsers(jedis).join(",")
         }
 
-        render(view: "config", model: [ignoredUsers: ignoredUsers])
+        render(view: "config", model: [ignoredUsers: ignoredUsers, allHashTags: allHashTags, hashTags: hashTags])
     }
 
     def updateConfiguration() {
-        def hashtags = grailsApplication.config.filter.queries
+        def hashTags = params.hashTags.split(",").collect { it.trim() }
         def ignoredUsers = params.ignoredUsers.split(",").collect { it.trim() }
 
+        // remove tweets for hash tags that have been removed
+        def currentHashTags = allHashTags as HashSet
+        def removedHashTags = currentHashTags.minus(hashTags)
+
         redisService.withRedis { Jedis jedis ->
+            removedHashTags.each {
+                filterService.clearStoredTweetsAndUrlCache(jedis, it)
+            }
+        }
+
+        // update configuration
+        redisService.withRedis { Jedis jedis ->
+            configurationService.setHashTags(jedis, hashTags)
             configurationService.setIgnoredUsers(jedis, ignoredUsers)
-            filterService.removeTweetsFromIgnoredUsers(jedis, hashtags, ignoredUsers)
+
+            filterService.removeTweetsFromIgnoredUsers(jedis, hashTags, ignoredUsers)
         }
 
         redirect(action: "config")
@@ -77,9 +92,19 @@ class FilterController {
 
     def clear() {
         redisService.withRedis { Jedis jedis ->
-            filterService.clearStoredTweetsAndUrlCache(jedis, params.query)
+            filterService.clearStoredTweetsAndUrlCache(jedis, params.hashTag)
         }
 
         redirect(action: "stats")
+    }
+
+    private def getAllHashTags() {
+        def hashTags = []
+
+        redisService.withRedis { Jedis jedis ->
+            hashTags = configurationService.getHashTags(jedis).sort().asList()
+        }
+
+        hashTags
     }
 }

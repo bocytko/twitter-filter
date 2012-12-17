@@ -1,4 +1,3 @@
-<%@ page import="org.codehaus.groovy.grails.commons.ConfigurationHolder as CH" %>
 <!doctype html>
 <!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
 <!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
@@ -25,7 +24,7 @@
         hideProgress();
         
         function fetchProgress() {
-            ${remoteFunction(method: 'GET', controller: 'filter', action: 'progress', params: [query: params.query], onSuccess: 'updateProgress(data,textStatus);')};
+            ${remoteFunction(method: 'GET', controller: 'filter', action: 'progress', params: [hashTag: params.hashTag], onSuccess: 'updateProgress(data,textStatus);')};
         }
         
         function updateProgress(data, textStatus) {
@@ -46,11 +45,11 @@
     <body>
         <div id="grailsLogo" style="text-align: center">
           <div>
-	          <g:each in="${CH.config.filter.queries}" var="q">
-	              <g:link class="g-button blue" controller="filter" action="index" params="[query: q]">${q}</g:link>
+	          <g:each in="${allHashTags}" var="tag">
+	              <g:link class="g-button blue" controller="filter" action="index" params="[hashTag: tag]">${tag}</g:link>
 	          </g:each>
-	          <g:each in="${CH.config.filter.queries}" var="q">
-	              <g:remoteLink class="g-button red" controller="filter" action="filter" params="[query: q]" update="fetch-result" onLoading="showProgress()" onSuccess="hideProgress()">fetch ${q}</g:remoteLink>
+	          <g:each in="${allHashTags}" var="tag">
+	              <g:remoteLink class="g-button red" controller="filter" action="filter" params="[hashTag: tag]" update="fetch-result" onLoading="showProgress()" onSuccess="hideProgress()">${tag} <i class="icon-refresh icon-white"></i></g:remoteLink>
 	          </g:each>
           </div>
           

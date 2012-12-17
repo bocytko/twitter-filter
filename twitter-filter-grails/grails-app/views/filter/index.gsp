@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="body">
-  <div><b>${params.query}</b>: last ${tweets.size()} tweets:</div>
+  <div><b>${hashTag}</b>: last ${tweets.size()} tweets:</div>
     <g:each in="${tweets}" var="tweet">
       <div class="tweet_row">
         <div class="tweet_image" style="vertical-align: middle; display: inline; float: left; margin-right: 10px"><img width="48" height="48" src="${tweet.profile_image_url}"></div>

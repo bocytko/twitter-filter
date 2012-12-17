@@ -28,7 +28,6 @@ class FilterService {
             new BlacklistedUserStrategy(configurationService.getIgnoredUsers(jedis)),
             new DuplicateUrlStrategy(tweetStore, urlCache),
             new DuplicateTweetStrategy(tweetStore)
-//            new LevenshteinDistanceStrategy(tweetStore)
         ]
 
         IProgressReporter progressReporter = new RedisProgressReporter(jedis, query)

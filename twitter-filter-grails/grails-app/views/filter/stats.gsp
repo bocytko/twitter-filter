@@ -15,12 +15,12 @@
         <th>Cached URLs</th>
         <th>&nbsp;</th>
       </tr>
-      <g:each in="${queries}" var="query">
+      <g:each in="${allHashTags}" var="hashTag">
         <tr>
-          <td>${query}</td>
-          <td>${stats[query].numTweets}</td>
-          <td>${stats[query].numUrls}</td>
-          <td><g:link class="g-button red" controller="filter" action="clear" params="[query: query]">Clear</g:link></td>
+          <td>${hashTag}</td>
+          <td>${stats[hashTag].numTweets}</td>
+          <td>${stats[hashTag].numUrls}</td>
+          <td><g:link class="g-button red" controller="filter" action="clear" params="[hashTag: hashTag]">Clear</g:link></td>
         </tr>
      </g:each>
     </table>
