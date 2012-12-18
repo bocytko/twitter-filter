@@ -41,6 +41,8 @@ class UrlResolver {
         URLConnection conn = url.openConnection()
         HttpURLConnection httpconn = conn as HttpURLConnection
         httpconn.setInstanceFollowRedirects(false)
+        httpconn.setConnectTimeout(5000)
+        httpconn.setReadTimeout(5000)
 
         def responseCode = httpconn.getResponseCode()
         def location = conn.getHeaderField("Location")

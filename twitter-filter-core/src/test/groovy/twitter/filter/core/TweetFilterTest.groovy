@@ -5,6 +5,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 
 import twitter.filter.core.filters.BlacklistedUserStrategy
+import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
 import twitter.filter.core.filters.LevenshteinDistanceStrategy
 import twitter.filter.core.model.IProgressReporter
@@ -55,7 +56,8 @@ class TweetFilterTest {
         def filterStrategies = [
             new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny']),
             new DuplicateUrlStrategy(tweetStore, urlCache),
-            new LevenshteinDistanceStrategy(tweetStore)
+            new DuplicateTweetStrategy(tweetStore)
+            //new LevenshteinDistanceStrategy(tweetStore)
         ]
 
         // TODO: mock

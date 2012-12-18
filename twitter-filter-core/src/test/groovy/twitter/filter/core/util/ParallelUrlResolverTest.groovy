@@ -13,7 +13,7 @@ class ParallelUrlResolverTest {
             "http://t.co/rhTrPEJy"
         ]
         def originalUrls = [
-            "http://www.mapr.com/company/press-releases/mapr-announces-general-availability-of-version-1-2-of-the-mapr-distribution-for-apache-hadoop",
+            "http://www.mapr.com/company/press-releases/mapr-announces-version-1-2-of-the-mapr-distribution-for-apache-hadoop",
             "http://blogs.splunk.com/2011/12/05/introducing-shep/"
         ]
 
@@ -24,7 +24,7 @@ class ParallelUrlResolverTest {
             [
                 "http://bit.ly/w0qqxB",
                 "http://www.mapr.com/news/mapr1-2",
-                "http://www.mapr.com/company/press-releases/mapr-announces-general-availability-of-version-1-2-of-the-mapr-distribution-for-apache-hadoop"
+                "http://www.mapr.com/company/press-releases/mapr-announces-version-1-2-of-the-mapr-distribution-for-apache-hadoop"
             ],
             [
                 "http://t.co/rhTrPEJy",
@@ -39,7 +39,7 @@ class ParallelUrlResolverTest {
             "http://t.co/rhTrPEJy"
         ]
         def originalUrls = [
-            "http://www.mapr.com/company/press-releases/mapr-announces-general-availability-of-version-1-2-of-the-mapr-distribution-for-apache-hadoop",
+            "http://www.mapr.com/company/press-releases/mapr-announces-version-1-2-of-the-mapr-distribution-for-apache-hadoop",
             "http://blogs.splunk.com/2011/12/05/introducing-shep/"
         ]
 
@@ -50,7 +50,7 @@ class ParallelUrlResolverTest {
             [
                 "http://bit.ly/w0qqxB",
                 "http://www.mapr.com/news/mapr1-2",
-                "http://www.mapr.com/company/press-releases/mapr-announces-general-availability-of-version-1-2-of-the-mapr-distribution-for-apache-hadoop"
+                "http://www.mapr.com/company/press-releases/mapr-announces-version-1-2-of-the-mapr-distribution-for-apache-hadoop"
             ],
             [
                 "http://t.co/rhTrPEJy",
