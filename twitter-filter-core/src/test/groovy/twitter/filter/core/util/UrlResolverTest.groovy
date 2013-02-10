@@ -1,10 +1,10 @@
 package twitter.filter.core.util
 
-import org.junit.Before;
+import org.junit.Before
 import org.junit.Test
 
 class UrlResolverTest {
-    private static UrlResolver resolver
+    private UrlResolver resolver
 
     @Before
     void initURLResolver() {
@@ -12,7 +12,7 @@ class UrlResolverTest {
     }
 
     @Test
-    void shouldResolveShortenedUrl() {
+    void shouldResolveShortenedAndFollowRedirectsToOtherUrls() {
         def url = "http://bit.ly/w0qqxB"
 
         def originalURL = resolver.getOriginalURL(url)
@@ -36,49 +36,86 @@ class UrlResolverTest {
     }
 
     @Test
-    void shouldHandleShortenedLinksWithNoProtocol() {
-        // http://t.co/uBFuduvw -> http://j.mp/t7TdCa -> http://nosql.mypopescu.com/post/13821082555 -> /post/13821082555?3524e100
+    void shouldReturnLastValidUrlForUrlForwardingToMalformedUrls() {
         def url = "http://t.co/uBFuduvw"
+        def secondUrl = "http://j.mp/t7TdCa"
+        def thirdUrl = "http://nosql.mypopescu.com/post/13821082555"
+        def malformedUrl = "/post/13821082555?3524e100"
+
+        def urlAndResponseChain = [
+            // [responseCode, location, originalUrl
+            [301, secondUrl, url],
+            [301, thirdUrl, secondUrl],
+            [301, malformedUrl, thirdUrl]
+        ]
+
+        // mock url resolver
+        UrlResolver resolver = new UrlResolver()
+
+        int callCount = 0
+        resolver.metaClass.resolve = {
+            if (callCount + 1 > urlAndResponseChain.size()) {
+                new URL(malformedUrl)
+            }
+
+            urlAndResponseChain[callCount++]
+        }
 
         def originalURL = resolver.getOriginalURL(url)
 
         assert originalURL == "http://nosql.mypopescu.com/post/13821082555"
-        assert resolver.urlChain == [
-            "http://t.co/uBFuduvw",
-            "http://j.mp/t7TdCa",
-            "http://nosql.mypopescu.com/post/13821082555"
-        ]
-    }
-
-    // TODO: mockUrlResolver
-    @Test
-    void shouldHandleUnkownHostException() {
-        def url = "http://t.co/xhhhvx7Y"
-
-        def originalUrl = resolver.getOriginalURL(url)
-
-        assert originalUrl == "http://www.cnews.ru/news/line/index.shtml?2011/12/23/470191"
-        assert resolver.urlChain == [
-            "http://t.co/xhhhvx7Y",
-            "http://bit.ly/uOJk4b",
-            "http://rss.feedsportal.com/c/803/f/413231/s/1b36af9a/l/0Lcnews0Bru0Cnews0Cline0Cindex0Bshtml0D20A110C120C230C470A191/story01.htm",
-            "http://da.feedsportal.com/c/803/f/413231/s/1b36af9a/l/0Lcnews0Bru0Cnews0Cline0Cindex0Bshtml0D20A110C120C230C470A191/ia1.htm",
-            "http://cnews.ru/news/line/index.shtml?2011/12/23/470191",
-            "http://www.cnews.ru/news/line/index.shtml?2011/12/23/470191"
-        ]
     }
 
     @Test
-    void shouldHandleReadTimeouts() {
-        def url = "http://t.co/5b8SR4FP"
+    void shouldKeepOriginalUrlForMalformedUrls() {
+        def url = "malformedURL"
 
         def originalUrl = resolver.getOriginalURL(url)
 
-        assert originalUrl == "http://htl.li/g9lB9"
-        assert resolver.urlChain == [
-            "http://t.co/5b8SR4FP",
-            "http://htl.li/g9lB9",
-            "http://gouvernance.dsisionnel.com/2012/12/big-data-des-soucis-de-performance-avec-vos-applications-apache-hadoop/"
-        ]
+        assert originalUrl == "malformedURL"
+    }
+
+    @Test
+    void shouldKeepUrlOnSocketExceptionForCheckedUrl() {
+        def url = "http://timeout-testing.z"
+
+        UrlResolver resolver = new UrlResolver()
+        resolver.metaClass.resolve = { throw new SocketTimeoutException("connect timed out") }
+
+        def originalUrl = resolver.getOriginalURL(url)
+
+        assert originalUrl == "http://timeout-testing.z"
+    }
+
+    @Test
+    void shouldKeepUrlOnUnknownHostExceptionForCheckedUrl() {
+        def url = "http://unknown-host-for-testing.z"
+
+        UrlResolver resolver = new UrlResolver()
+        resolver.metaClass.resolve = { throw new UnknownHostException(url) }
+
+        def originalUrl = resolver.getOriginalURL(url)
+
+        assert originalUrl == "http://unknown-host-for-testing.z"
+    }
+
+    @Test
+    void shouldKeepOriginalUrlOnUnknownHostExceptionForForwardedUrl() {
+        def url = "http://unknown-host-at-step-2.z"
+        def firstCall = true
+
+        UrlResolver resolver = new UrlResolver()
+        resolver.metaClass.resolve = {
+            if (firstCall) {
+                firstCall = false
+                [300, "http://forwarded-uknown-host.z", url ]
+            } else {
+                throw new UnknownHostException(url)
+            }
+        }
+
+        def originalUrl = resolver.getOriginalURL(url)
+
+        assert originalUrl == "http://unknown-host-at-step-2.z"
     }
 }

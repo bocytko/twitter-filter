@@ -7,16 +7,16 @@ class UrlResolver {
     def urlChain = []
 
     def getOriginalURL(def str) {
-        def result = resolve(str)
+        def result = [0, str, str]
 
-        int i = 0
-        while (isNonFinalResponseCode(result[0]) && i < 10) {
-            i++
+        for (int i = 0; isNonFinalResponseCode(result[0]) && i < 10; i++) {
             try {
                 result = resolve(result[1])
             } catch(MalformedURLException e) {
                 break
             } catch(UnknownHostException e) {
+                break
+            } catch(IOException e) {
                 break
             } catch(Exception e) {
                 log.error e.message
