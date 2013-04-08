@@ -25,14 +25,6 @@ class TweetFetcher {
         tweets
     }
 
-    def getJsonPayLoad() {
-        def encodedQuery = query.replace("#", "%23")
-        def url = "http://search.twitter.com/search.json?q=${encodedQuery}&rpp=${results}&page=${page}&include_entities=true&with_twitter_user_id=true&result_type=recent"
-        log.info url
-
-        def jsonPayload = new URL(url).text
-    }
-
     private def fetchJsonTweets() {
         def jsonPayload = getJsonPayLoad()
         log.debug "Parsing JSon output..."
@@ -46,6 +38,14 @@ class TweetFetcher {
         log.debug "JSon parsed"
 
         tweets.results
+    }
+
+    private def getJsonPayLoad() {
+        def encodedQuery = query.replace("#", "%23")
+        def url = "http://search.twitter.com/search.json?q=${encodedQuery}&rpp=${results}&page=${page}&include_entities=true&with_twitter_user_id=true&result_type=recent"
+        log.info url
+
+        def jsonPayload = new URL(url).text
     }
 
     // TODO: refactor or remove
