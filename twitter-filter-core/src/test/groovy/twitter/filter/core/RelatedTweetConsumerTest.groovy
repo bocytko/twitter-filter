@@ -1,21 +1,23 @@
 package twitter.filter.core
 
-import groovy.mock.interceptor.MockFor;
+import groovy.mock.interceptor.MockFor
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.Before
+import org.junit.Test
 
-import twitter.filter.core.filters.DuplicateStrategy;
-import twitter.filter.core.filters.FilterStrategy;
-import twitter.filter.core.model.ITweetStore;
+import twitter.filter.core.filters.DuplicateStrategy
+import twitter.filter.core.filters.FilterStrategy
 import twitter.filter.core.model.ListTweetStore
+import twitter.filter.core.model.MapRelatedTweetsStore
 
 class RelatedTweetConsumerTest {
     private RelatedTweetConsumer consumer
 
     @Before
     void before() {
-        consumer = new RelatedTweetConsumer().withTweetStore(new ListTweetStore())
+        consumer = new RelatedTweetConsumer()
+                    .withTweetStore(new ListTweetStore())
+                    .withRelatedTweetStore(new MapRelatedTweetsStore())
     }
 
     @Test

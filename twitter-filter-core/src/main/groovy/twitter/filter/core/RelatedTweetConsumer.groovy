@@ -4,17 +4,21 @@ import java.util.Map
 
 import twitter.filter.core.filters.DuplicateStrategy
 import twitter.filter.core.filters.FilterStrategy
+import twitter.filter.core.model.IRelatedTweetsStore;
 import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.model.ListTweetStore
 
 class RelatedTweetConsumer {
     ITweetStore tweetStore
-
-    // TODO: add abstraction
-    Map<Tweet, List<Tweet> > relatedTweets = [:]
+    IRelatedTweetsStore relatedTweetStore
 
     List<FilterStrategy> filterStrategies = []
     List<DuplicateStrategy> duplicateStrategies = []
+
+    RelatedTweetConsumer withRelatedTweetStore(def relatedTweetStore) {
+        this.relatedTweetStore = relatedTweetStore
+        this
+    }
 
     RelatedTweetConsumer withTweetStore(def tweetStore) {
         this.tweetStore = tweetStore
@@ -36,9 +40,7 @@ class RelatedTweetConsumer {
     }
 
     def getRelatedTweets(Tweet t) {
-        def related = relatedTweets[t]
-
-        related != null ? related : []
+        relatedTweetStore.getRelatedTweets(t)
     }
 
     int consume(def tweetsToConsume) {
@@ -49,12 +51,12 @@ class RelatedTweetConsumer {
         filterUsingStrategies(tweets)
 
         tweets.each {
-            Tweet duplicate = findDuplicate(it)
-            if (duplicate == null) {
+            Tweet original = getOriginalTweetFor(it)
+            if (original == null) {
                 tweetStore.storeTweet(it)
                 consumed++
             } else {
-                saveAsDuplicateOf(it, duplicate)
+                saveTweetAsDuplicateOf(original, it)
             }
         }
 
@@ -67,22 +69,18 @@ class RelatedTweetConsumer {
         }
     }
 
-    private Tweet findDuplicate(Tweet t) {
+    private Tweet getOriginalTweetFor(Tweet t) {
         for (DuplicateStrategy ds : duplicateStrategies) {
-            def duplicate = ds.apply(t)
-            if (duplicate != null) {
-                return duplicate
+            def originalTweet = ds.apply(t)
+            if (originalTweet != null) {
+                return originalTweet
             }
         }
 
         null
     }
 
-    private void saveAsDuplicateOf(Tweet t, Tweet duplicate) {
-        if (relatedTweets.containsKey(duplicate)) {
-            relatedTweets[duplicate].add(t)
-        } else {
-            relatedTweets[duplicate] = [t]
-        }
+    private void saveTweetAsDuplicateOf(Tweet original, Tweet duplicate) {
+        relatedTweetStore.add(original, duplicate)
     }
 }
