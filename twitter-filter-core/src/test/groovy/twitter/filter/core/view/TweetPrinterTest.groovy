@@ -14,7 +14,7 @@ class TweetPrinterTest {
         Tweet tweet = TweetFactory.createFromTextAndUrl([text, url])
 
         // when
-        def html = new TweetPrinter().getHtml(tweet)
+        def html = new TweetPrinter().getHtml(tweet, [])
 
         // then
         assert html.contains("""sample text <a href="http://google.com">http://google.com</a>""")
@@ -33,7 +33,7 @@ class TweetPrinterTest {
         Tweet tweet = TweetFactory.createFromTextAndUrl([text, url])
 
         // when
-        def html = new TweetPrinter().getHtml(tweet)
+        def html = new TweetPrinter().getHtml(tweet, [])
 
         // then
         assert html.contains("""sample (<a href="http://text.com">http://text.com</a>) <a href="http://google.com">http://google.com</a>" <a href="http://grails.org">http://grails.org</a>, <a href="http://grails.org">http://grails.org</a>.""")
@@ -47,9 +47,33 @@ class TweetPrinterTest {
         Tweet tweet = TweetFactory.createFromTextAndUrl([text, url])
 
         // when
-        def html = new TweetPrinter().getHtml(tweet)
+        def html = new TweetPrinter().getHtml(tweet, [])
 
         // then
         assert html.contains("""scrunch <a href="https://t.co/EgufP7Th">https://t.co/EgufP7Th</a> which""")
+        assert html.contains("""(0)</div>""")
+    }
+
+    @Test
+    void shouldDisplayRelatedTweetsInTweetText() {
+        // given
+        def text = "rounding out the list there is #scrunch https://t.co/EgufP7Th which supports #hbase"
+        def url = ["https://t.co/EgufP7Th"]
+        Tweet tweet = TweetFactory.createFromTextAndUrl([text, url])
+
+        def relatedText = "sample (http://text.com) http://google.com\" http://grails.org, http://grails.org."
+        def relatedUrl = [
+            "http://text.com",
+            "http://google.com",
+            "http://grails.org",
+            "http://grails.org",
+        ]
+        Tweet relatedTweet = TweetFactory.createFromTextAndUrl([relatedText, relatedUrl])
+
+        // when
+        def html = new TweetPrinter().getHtml(tweet, [relatedTweet])
+
+        // then
+        assert html.contains("""(1)</div>""")
     }
 }

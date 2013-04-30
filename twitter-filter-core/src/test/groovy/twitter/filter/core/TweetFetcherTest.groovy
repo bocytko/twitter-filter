@@ -90,7 +90,7 @@ class TweetFetcherTest {
         def printer = new TweetPrinter()
 
         filteredTweets.each { printer.printPlainText(it) }
-        filteredTweets.each { printer.printHtml(it) }
+        filteredTweets.each { printer.printHtml(it, []) }
     }
 
     private void compareWithExpectedTweets(def tweets, String resource) {

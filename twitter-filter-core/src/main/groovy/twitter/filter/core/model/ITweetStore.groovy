@@ -7,13 +7,9 @@ interface ITweetStore {
 
     def getStoredTweets()
 
-    def addToKnownUrls(def urlChain)
-
-    def getKnownUrls()
+    Tweet getTweetForUrl(def url)
 
     def getNumberOfStoredTweets()
-
-    def getNumberOfKnownUrls()
 
     def removeTweets(Closure condition)
 

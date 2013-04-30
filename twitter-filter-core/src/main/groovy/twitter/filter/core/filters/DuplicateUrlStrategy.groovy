@@ -6,20 +6,17 @@ import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.model.UrlCache
 
 @Log4j("log")
-class DuplicateUrlStrategy implements FilterStrategy {
+class DuplicateUrlStrategy implements DuplicateStrategy {
     private ITweetStore tweetStore
-    private def knownUrls
-
     private UrlCache urlCache
 
     DuplicateUrlStrategy(ITweetStore tweetStore, UrlCache urlCache) {
         this.tweetStore = tweetStore
-        this.knownUrls = tweetStore.getKnownUrls()
         this.urlCache = urlCache
     }
 
     @Override
-    def apply(Tweet tweet) {
+    Tweet apply(Tweet tweet) {
         for (def url : tweet.urls) {
             log.debug "Checking $url ..."
             try {
@@ -32,18 +29,16 @@ class DuplicateUrlStrategy implements FilterStrategy {
             // resolve url to chain of redirects
             def urlChain = urlCache.get(url)
 
-            // any url from chain already known?
+            // any url from chain already referenced by another tweet?
             for (def urlFromChain : urlChain) {
-                if (urlFromChain in knownUrls) {
+                Tweet referencedTweet = tweetStore.getTweetForUrl(urlFromChain)
+                if (referencedTweet != null) {
                     log.debug "$urlFromChain already known!"
-                    // knownUrls = tweetStore.addToKnownUrls(urlChain)
-                    return true
+                    return referencedTweet
                 }
             }
-
-            knownUrls = tweetStore.addToKnownUrls(urlChain)
         }
 
-        false
+        null
     }
 }

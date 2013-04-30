@@ -12,14 +12,12 @@
        <tr>
         <th>Hashtag</th>
         <th>Tweets</th>
-        <th>Cached URLs</th>
         <th>&nbsp;</th>
       </tr>
       <g:each in="${allHashTags}" var="hashTag">
         <tr>
           <td>${hashTag}</td>
           <td>${stats[hashTag].numTweets}</td>
-          <td>${stats[hashTag].numUrls}</td>
           <td><g:link class="g-button red" controller="filter" action="clear" params="[hashTag: hashTag]">Clear</g:link></td>
         </tr>
      </g:each>

@@ -32,4 +32,9 @@ class MapRelatedTweetsStore implements IRelatedTweetsStore {
     def getRelatedTweets(Tweet tweet) {
         relatedTweets.containsKey(tweet) ? relatedTweets[tweet] : []
     }
+
+    @Override
+    void clear() {
+        relatedTweets.clear()
+    }
 }

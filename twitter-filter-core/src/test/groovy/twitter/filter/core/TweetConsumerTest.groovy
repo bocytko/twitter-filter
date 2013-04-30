@@ -13,7 +13,7 @@ import twitter.filter.core.model.MapUrlCache
 import twitter.filter.core.model.SimpleProgressReporter
 
 class TweetConsumerTest {
-    private TweetConsumer consumer
+    private ITweetConsumer consumer
     def tweetStore = new ListTweetStore()
     def urlCache = new MapUrlCache()
     def threads = 10

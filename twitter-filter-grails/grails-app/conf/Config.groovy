@@ -70,8 +70,8 @@ environments {
     }
 }
 
-filter.ignoredUsers = ['fpayande', 'Hatzolah_NYC', '68raser', 'HBaselog', 'Looking4Action', 'iOfBoroPark', 'iOfFlatbush', 'rqna', 'FariPayandeh', 'bsspunit1', 'HatzolahNYC', 'ShomrimHatzny', 'd8Pit', 'buffallboy', 'hatzolahbssp']
-
+// str.split(',').collect { "'" + it + "'" }
+filter.ignoredUsers = ['fpayande', 'Hatzolah_NYC', '68raser', 'HBaselog', 'Looking4Action', 'iOfBoroPark', 'iOfFlatbush', 'rqna', 'FariPayandeh', 'buffofbp', 'bsspunit1', 'HatzolahNYC', 'ShomrimHatzny', 'd8Pit', 'buffallboy', 'hatzolahbssp', 'bpactions']
 filter.queries = ['#hadoop', '#hbase']
 filter.numThreads = 10
 filter.pagesToFetch = 2

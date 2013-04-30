@@ -7,32 +7,43 @@ import redis.clients.jedis.Jedis
 
 @Log4j("log")
 class RedisTweetStore implements ITweetStore {
-    private static String TWEETS_KEY = "tweets"
-    private static String KNOWN_URLS_KEY = "tweets-known-urls"
-    private static String SEPARATOR = ":"
+    private static final String TWEETS_KEY = "tweets"
+    private static final String TWEET_TO_URL_KEY = "tweet-url"
+    private static final String SEPARATOR = ":"
+    private static final String WILDCARD = "*"
 
-    private static int MAX_STORED_TWEETS = 200
+    private static final int MAX_STORED_TWEETS = 200
 
     private String tweetsKey
-    private String knownUrlsKey
+    private String tweetToUrlKey
 
     private Jedis jedis
+    private UrlCache urlCache
 
-    RedisTweetStore(Jedis jedis, def query) {
+    RedisTweetStore(Jedis jedis, def query, UrlCache urlCache) {
         this.tweetsKey = TWEETS_KEY + SEPARATOR + query
-        this.knownUrlsKey = KNOWN_URLS_KEY + SEPARATOR + query
+        this.tweetToUrlKey = TWEET_TO_URL_KEY + SEPARATOR + query + SEPARATOR
         this.jedis = jedis
+        this.urlCache = urlCache
 
         log.info "tweetsKey: ${this.tweetsKey}"
-        log.info "knownUrlsKey: ${knownUrlsKey}"
     }
 
     @Override
     void storeTweet(Tweet tweet) {
         def tweetAsJson = tweet.toJson()
-        jedis.rpush(tweetsKey, tweetAsJson)
+        storeUrlsForTweet(tweet)
 
+        jedis.rpush(tweetsKey, tweetAsJson)
         jedis.ltrim(tweetsKey, -MAX_STORED_TWEETS, -1)
+    }
+
+    private void storeUrlsForTweet(Tweet tweet) {
+        def tweetAsJson = tweet.toJson()
+        tweet.urls.each {
+            // each url from chain shall reference the tweet
+            urlCache.get(it).each { jedis.rpush(tweetToUrlKey + it, tweetAsJson) }
+        }
     }
 
     @Override
@@ -40,6 +51,13 @@ class RedisTweetStore implements ITweetStore {
         def storedTweets = jedis.lrange(tweetsKey, 0, -1)
 
         storedTweets.collect { TweetFactory.createFromJson(it) }
+    }
+
+    @Override
+    Tweet getTweetForUrl(def url) {
+        def tweetAsJson = jedis.lrange(tweetToUrlKey + url, 0, 1)
+
+        tweetAsJson.isEmpty() ? null : TweetFactory.createFromJson(tweetAsJson[0])
     }
 
     @Override
@@ -52,32 +70,15 @@ class RedisTweetStore implements ITweetStore {
     }
 
     @Override
-    def addToKnownUrls(def urlChain) {
-        urlChain.each {
-            jedis.rpush(knownUrlsKey, it)
-        }
-
-        getKnownUrls()
-    }
-
-    @Override
-    def getKnownUrls() {
-        jedis.lrange(knownUrlsKey, 0, -1)
-    }
-
-    @Override
     def getNumberOfStoredTweets() {
         jedis.llen(tweetsKey)
     }
 
     @Override
-    def getNumberOfKnownUrls() {
-        jedis.llen(knownUrlsKey)
-    }
-
-    @Override
     void clear() {
         jedis.del(tweetsKey)
-        jedis.del(knownUrlsKey)
+
+        Set<String> urls = jedis.keys(tweetToUrlKey + WILDCARD)
+        urls.each { jedis.del(it) }
     }
 }

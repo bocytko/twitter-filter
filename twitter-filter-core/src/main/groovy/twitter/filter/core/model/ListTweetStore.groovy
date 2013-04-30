@@ -4,11 +4,13 @@ import twitter.filter.core.Tweet
 
 class ListTweetStore implements ITweetStore {
     private def storedTweets = []
-    private def knownUrls = []
+    private def urlToTweet = [:]
 
     @Override
     public void storeTweet(Tweet tweet) {
         storedTweets << tweet
+
+        tweet.urls.each { urlToTweet[it] = tweet }
     }
 
     @Override
@@ -17,30 +19,18 @@ class ListTweetStore implements ITweetStore {
     }
 
     @Override
+    Tweet getTweetForUrl(def url) {
+        urlToTweet[url]
+    }
+
+    @Override
     def removeTweets(Closure condition) {
         storedTweets.removeAll(condition)
     }
 
     @Override
-    def addToKnownUrls(def urlChain) {
-        knownUrls = knownUrls + urlChain
-
-        knownUrls
-    }
-
-    @Override
-    def getKnownUrls() {
-        knownUrls
-    }
-
-    @Override
     def getNumberOfStoredTweets() {
         storedTweets.size()
-    }
-
-    @Override
-    def getNumberOfKnownUrls() {
-        knownUrls.size()
     }
 
     @Override

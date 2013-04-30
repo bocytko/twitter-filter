@@ -1,5 +1,6 @@
 package twitter.filter
 
+import twitter.filter.core.RelatedTweetConsumer;
 import twitter.filter.core.Tweet
 import twitter.filter.core.TweetConsumer
 import twitter.filter.core.TweetFilter
@@ -8,8 +9,10 @@ import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
 import twitter.filter.core.filters.LevenshteinDistanceStrategy
 import twitter.filter.core.model.IProgressReporter
+import twitter.filter.core.model.IRelatedTweetsStore;
 import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.model.RedisProgressReporter
+import twitter.filter.core.model.RedisRelatedTweetsStore;
 import twitter.filter.core.model.RedisTweetStore
 import twitter.filter.core.model.RedisUrlCache
 import twitter.filter.core.model.UrlCache
@@ -22,21 +25,28 @@ class FilterService {
 
     int filterTweets(Jedis jedis, def query) {
         UrlCache urlCache = new RedisUrlCache(jedis)
-        ITweetStore tweetStore = new RedisTweetStore(jedis, query)
+        ITweetStore tweetStore = new RedisTweetStore(jedis, query, urlCache)
+        IRelatedTweetsStore relatedTweetStore = new RedisRelatedTweetsStore(jedis, query)
 
         def filterStrategies = [
             new BlacklistedUserStrategy(configurationService.getIgnoredUsers(jedis)),
+        ]
+
+        def duplicateStrategies = [
             new DuplicateUrlStrategy(tweetStore, urlCache),
             new DuplicateTweetStrategy(tweetStore)
         ]
 
         IProgressReporter progressReporter = new RedisProgressReporter(jedis, query)
 
-        TweetConsumer consumer = new TweetConsumer().withTweetStore(tweetStore)
-                                                    .withUrlCache(urlCache)
-                                                    .withThreads(configurationService.getNumberOfThreads())
-                                                    .withFilterStrategies(filterStrategies)
-                                                    .withProgressReporter(progressReporter)
+        RelatedTweetConsumer consumer = new RelatedTweetConsumer()
+                                            .withUrlCache(urlCache)
+                                            .withThreads(configurationService.getNumberOfThreads())
+                                            .withTweetStore(tweetStore)
+                                            .withRelatedTweetStore(relatedTweetStore)
+                                            .withFilterStrategies(filterStrategies)
+                                            .withDuplicateStrategies(duplicateStrategies)
+                                            .withProgressReporter(progressReporter)
 
         TweetFilter tweetFilter = new TweetFilter().withTweetConsumer(consumer)
 
@@ -46,7 +56,9 @@ class FilterService {
     }
 
     def getLastNTweets(Jedis jedis, def query, int N) {
-        ITweetStore tweetStore = new RedisTweetStore(jedis, query)
+        UrlCache urlCache = new RedisUrlCache(jedis)
+        ITweetStore tweetStore = new RedisTweetStore(jedis, query, urlCache)
+        IRelatedTweetsStore relatedTweetStore = new RedisRelatedTweetsStore(jedis, query)
 
         TweetPrinter printer = new TweetPrinter()
 
@@ -55,11 +67,16 @@ class FilterService {
             tweets = tweets[0..N-1]
         }
 
-        tweets.each {
-            printer.convertUrlsToHtmlLinks(it)
+        def displayTweets = tweets.collect {
+            new DisplayTweet(it, relatedTweetStore.getRelatedTweets(it))
         }
 
-        tweets
+        displayTweets.each {
+            // TODO: TweetPrinter shall not change Tweet.text
+            printer.convertUrlsToHtmlLinks(it.tweet)
+        }
+
+        displayTweets
     }
 
     def getProgress(Jedis jedis, def query) {
@@ -73,11 +90,11 @@ class FilterService {
         def stats = [:]
 
         hashtags.each {
-            ITweetStore tweetStore = new RedisTweetStore(jedis, it)
+            UrlCache urlCache = new RedisUrlCache(jedis)
+            ITweetStore tweetStore = new RedisTweetStore(jedis, it, urlCache)
 
             stats[it] = [
-                numTweets: tweetStore.getNumberOfStoredTweets(),
-                numUrls: tweetStore.getNumberOfKnownUrls()
+                numTweets: tweetStore.getNumberOfStoredTweets()
             ]
         }
 
@@ -90,14 +107,16 @@ class FilterService {
 
     void removeTweets(Jedis jedis, def hashtags, Closure c) {
         hashtags.each {
-            ITweetStore tweetStore = new RedisTweetStore(jedis, it)
+            UrlCache urlCache = new RedisUrlCache(jedis)
+            ITweetStore tweetStore = new RedisTweetStore(jedis, it, urlCache)
 
             tweetStore.removeTweets(c)
         }
     }
 
     void clearStoredTweetsAndUrlCache(Jedis jedis, def query) {
-        ITweetStore tweetStore = new RedisTweetStore(jedis, query)
+        UrlCache urlCache = new RedisUrlCache(jedis)
+        ITweetStore tweetStore = new RedisTweetStore(jedis, query, urlCache)
 
         tweetStore.clear()
 

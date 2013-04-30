@@ -1,17 +1,41 @@
 package twitter.filter.core.model
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.BeforeClass
+import org.junit.AfterClass
+import org.junit.Test
+import redis.clients.jedis.Jedis
 import twitter.filter.core.Tweet
 import twitter.filter.core.TweetFactory;
 
-class MapRelatedTweetsStoreTest {
-    MapRelatedTweetsStore relatedTweets
+class RedisRelatedTweetsTest {
+    private static final String HOST = "localhost"
+    private static Jedis jedis
+
+    private RedisRelatedTweetsStore relatedTweets
+
+    @BeforeClass
+    static void initializeRedis() {
+        jedis = new Jedis(HOST)
+
+        // select test database
+        jedis.select(1)
+    }
+
+    @AfterClass
+    static void flushRedis() {
+        jedis.flushDB()
+    }
 
     @Before
     void before() {
-        relatedTweets = new MapRelatedTweetsStore()
+        relatedTweets = new RedisRelatedTweetsStore(jedis, "#foo")
+    }
+
+    @After
+    void emptyRelatedTweets() {
+        relatedTweets.clear()
     }
 
     @Test
@@ -46,17 +70,5 @@ class MapRelatedTweetsStoreTest {
 
         def result = relatedTweets.getRelatedTweets(tweet) as List
         assert [first, second] == result
-    }
-
-    @Test
-    void canStoreAndRemoveRelatedTweets() {
-        Tweet tweet = TweetFactory.createFromText("tweet")
-        Tweet first = TweetFactory.createFromText("1. related")
-
-        relatedTweets.add(tweet, first)
-        relatedTweets.clear()
-
-        def result = relatedTweets.getRelatedTweets(tweet) as List
-        assert [] == result
     }
 }

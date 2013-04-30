@@ -5,19 +5,21 @@ import twitter.filter.core.view.TweetPrinter
 
 @Log4j("log")
 class TweetFilter {
-    private TweetConsumer consumer
+    private ITweetConsumer consumer
 
-    def withTweetConsumer(TweetConsumer consumer) {
+    def withTweetConsumer(ITweetConsumer consumer) {
         this.consumer = consumer
 
         this
     }
 
+    // TODO: build()
+
     def doFilter(def query, def pages) {
         int addedTweets = 0
         def results = 100
 
-        consumer.progressReporter?.setMaxIterations(pages)
+        consumer.getProgressReporter()?.setMaxIterations(pages)
 
         for (; pages > 0; pages--) {
             TweetFetcher fetcher = new TweetFetcher(query, pages, results)
@@ -41,6 +43,6 @@ class TweetFilter {
         def lastNTweets = filteredTweets[filteredTweets.size() - numberOfConsumedTweets .. filteredTweets.size() - 1]
 
         TweetPrinter printer = new TweetPrinter()
-        lastNTweets.each { printer.printHtml(it) }
+        lastNTweets.each { printer.printHtml(it, consumer.getRelatedTweets(it)) }
     }
 }

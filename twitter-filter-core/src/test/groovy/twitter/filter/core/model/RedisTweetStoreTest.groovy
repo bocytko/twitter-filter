@@ -1,6 +1,7 @@
 package twitter.filter.core.model
 
 import groovy.json.JsonSlurper
+import groovy.mock.interceptor.MockFor
 
 import org.junit.After
 import org.junit.AfterClass
@@ -13,12 +14,13 @@ import twitter.filter.core.TweetFactory
 import redis.clients.jedis.Jedis
 
 class RedisTweetStoreTest {
-    private static String HOST = "localhost"
-    private static String TEST_QUERY = "#hadoop"
-    private static String OTHER_QUERY = "#hive"
+    private static final String HOST = "localhost"
+    private static final String TEST_QUERY = "#hadoop"
+    private static final String OTHER_QUERY = "#hive"
 
     private static Jedis jedis
 
+    private UrlCache urlCache
     private RedisTweetStore tweetStore
 
     @BeforeClass
@@ -36,7 +38,8 @@ class RedisTweetStoreTest {
 
     @Before
     void before() {
-        tweetStore = new RedisTweetStore(jedis, TEST_QUERY)
+        urlCache = new MapUrlCache()
+        tweetStore = new RedisTweetStore(jedis, TEST_QUERY, urlCache)
         assert tweetStore.getStoredTweets() == []
     }
 
@@ -44,6 +47,8 @@ class RedisTweetStoreTest {
     void after() {
         tweetStore.clear()
         assert tweetStore.getStoredTweets() == []
+
+        jedis.flushDB()
     }
 
     @Test
@@ -73,6 +78,33 @@ class RedisTweetStoreTest {
     }
 
     @Test
+    void allUrlsShallReferenceSavedTweet() {
+        // given
+        def foo = new Tweet()
+        def bar = new Tweet()
+        foo.text = "A"
+        bar.text = "B"
+        foo.urls = ["first"]
+        bar.urls = ["second"]
+        def tweets = [ foo, bar ]
+
+        def urlCacheMock = new MockFor(UrlCache)
+        urlCacheMock.demand.get(2) { it == "first" ? ["first", "final url"] : ["second", "final url"] }
+
+        tweetStore = new RedisTweetStore(jedis, TEST_QUERY, urlCacheMock.proxyInstance())
+
+        // when
+        tweets.each { tweetStore.storeTweet(it) }
+
+        // then
+        def storedTweets = tweetStore.getStoredTweets()
+
+        assert tweets == storedTweets
+        assert 2 == tweetStore.getNumberOfStoredTweets()
+        assert 3 == jedis.keys("tweet-url*").size()
+    }
+
+    @Test
     void shouldRemoveTweetsMatchingCondition() {
         // given
         def twitterJsonTweets = getTweetsFromTwitterJsonText()
@@ -96,16 +128,26 @@ class RedisTweetStoreTest {
     }
 
     @Test
-    void shouldRetrieveKnownUrlsSavedInRedis() {
+    void canRetrieveTweetForUrl() {
         // given
-        def urlChain = ["A", "B", "C"]
+        urlCache.put("A", ["A"])
+        urlCache.put("B", ["B"])
+
+        Tweet foo = new Tweet()
+        foo.urls = ["A", "B"]
+        foo.text = "tweet"
 
         // when
-        def knownUrls = tweetStore.addToKnownUrls(urlChain)
+        tweetStore.storeTweet(foo)
 
-        assert urlChain == knownUrls
-        assert urlChain == tweetStore.knownUrls
-        assert 3 == tweetStore.getNumberOfKnownUrls()
+        // then
+        assert foo == tweetStore.getTweetForUrl("A")
+        assert foo == tweetStore.getTweetForUrl("B")
+    }
+
+    @Test
+    void shouldReturnNullForUnknownUrl() {
+        assert null == tweetStore.getTweetForUrl("B")
     }
 
     @Test
@@ -125,7 +167,7 @@ class RedisTweetStoreTest {
         def mainQueryTweets = mainQueryTweetText.collect { TweetFactory.createFromTwitterJson(it) }
         def otherQueryTweets = otherQueryTweetText.collect { TweetFactory.createFromTwitterJson(it) }
 
-        ITweetStore otherQueryTweetStore = new RedisTweetStore(jedis, OTHER_QUERY)
+        ITweetStore otherQueryTweetStore = new RedisTweetStore(jedis, OTHER_QUERY, urlCache)
 
         // when
         mainQueryTweets.each { tweetStore.storeTweet(it) }

@@ -46,15 +46,16 @@ class ListTweetStoreTest {
     }
 
     @Test
-    void canAddAndRetrieveKnownUrls() {
+    void canRetrieveTweetByUrl() {
         // given
-        def urlChain = ["A", "B", "C"]
+        Tweet first = TweetFactory.createFromText("first")
+        first.urls = ["A"]
         ITweetStore store = new ListTweetStore()
 
         // when
-        store.addToKnownUrls(urlChain)
+        store.storeTweet(first)
 
-        assert store.knownUrls == urlChain
-        assert store.numberOfKnownUrls == 3
+        // then
+        assert first == store.getTweetForUrl("A")
     }
 }

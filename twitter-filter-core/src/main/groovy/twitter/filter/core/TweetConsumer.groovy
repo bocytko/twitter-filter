@@ -6,9 +6,10 @@ import twitter.filter.core.model.IProgressReporter
 import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.model.UrlCache
 import twitter.filter.core.util.ParallelUrlResolver
+import twitter.filter.core.util.UrlResolver;
 
 @Log4j("log")
-class TweetConsumer {
+class TweetConsumer implements ITweetConsumer {
     // tweet and known links storage
     private ITweetStore tweetStore
 
@@ -19,80 +20,47 @@ class TweetConsumer {
 
     private def filterStrategies
 
-    private IProgressReporter progressReporter
+    IProgressReporter progressReporter
 
-    def withTweetStore(ITweetStore tweetStore) {
+    TweetConsumer withTweetStore(ITweetStore tweetStore) {
         this.tweetStore = tweetStore
         this
     }
 
-    def withUrlCache(UrlCache urlCache) {
+    TweetConsumer withUrlCache(UrlCache urlCache) {
         this.urlCache = urlCache
         this
     }
 
-    def withThreads(int threads) {
+    TweetConsumer withThreads(int threads) {
         this.threads = threads
         this
     }
 
-    def withFilterStrategies(def filterStrategies) {
+    TweetConsumer withFilterStrategies(def filterStrategies) {
         this.filterStrategies = filterStrategies
         this
     }
 
-    def withProgressReporter(IProgressReporter progressReporter) {
+    TweetConsumer withProgressReporter(IProgressReporter progressReporter) {
         this.progressReporter = progressReporter
         this
     }
 
+    @Override
     def getTweets() {
         tweetStore.storedTweets
     }
 
-    /**
-     * Adds the given tweets to the collection.
-     * May be called incrementally.
-     *
-     * @param tweets
-     * @return number of tweets, that have been added to the internal collection
-     */
+    @Override
     int consume(def tweets) {
         populateUrlCache(tweets)
         filterTweets(tweets)
     }
 
-    /**
-     * Retrieves all URLs from the given tweets
-     * and resolves its currently unknown urls using
-     * {@link ParallelUrlResolver}.
-     *
-     * The resolved urls (url chain) are saved
-     * as (url: url chain) into the urlCache.
-     *
-     * @param tweets
-     */
     private void populateUrlCache(def tweets) {
-        def before = System.currentTimeMillis()
-        log.info "Getting all URLs..."
-        def urls = []
-        tweets.each { urls = urls + it.urls }
-        log.info "Got a total of ${urls.size()} URLs..."
-
-        log.info "Filtering already known URLs..."
-        urls = urlCache.filterKnownUrls(urls)
-
-        log.info "Got ${urls.size()} URLs. Removing duplicate urls..."
-        urls = urls.sort().unique()
-
-        log.info "Resolving ${urls.size()} unknown URLs..."
         ParallelUrlResolver urlResolver = new ParallelUrlResolver(threads)
-        def resolvedUrls = urlResolver.resolveUrls(urls)
-
-        urlCache.putAll(urls, resolvedUrls)
-
-        def after = System.currentTimeMillis()
-        log.info "Took ${after-before} ms"
+        urlCache.populateWithUrlsFromTweets(tweets, urlResolver)
     }
 
     private int filterTweets(def tweets) {
@@ -125,5 +93,10 @@ class TweetConsumer {
         }
 
         false
+    }
+
+    @Override
+    public getRelatedTweets(Tweet tweet) {
+        []
     }
 }

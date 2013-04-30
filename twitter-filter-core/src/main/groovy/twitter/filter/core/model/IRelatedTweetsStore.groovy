@@ -8,4 +8,6 @@ interface IRelatedTweetsStore {
     def add(Tweet tweet, Collection related)
 
     def getRelatedTweets(Tweet tweet)
+
+    void clear()
 }
