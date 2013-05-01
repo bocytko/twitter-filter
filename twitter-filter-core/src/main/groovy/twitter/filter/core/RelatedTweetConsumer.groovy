@@ -1,13 +1,10 @@
 package twitter.filter.core
 
-import java.util.Map
-
 import twitter.filter.core.filters.DuplicateStrategy
 import twitter.filter.core.filters.FilterStrategy
 import twitter.filter.core.model.IProgressReporter
 import twitter.filter.core.model.IRelatedTweetsStore
 import twitter.filter.core.model.ITweetStore
-import twitter.filter.core.model.ListTweetStore
 import twitter.filter.core.model.UrlCache
 import twitter.filter.core.util.ParallelUrlResolver
 

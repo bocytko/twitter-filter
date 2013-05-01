@@ -1,8 +1,5 @@
 package twitter.filter.core.model
 
-import java.util.List
-import java.util.Map
-
 import twitter.filter.core.Tweet
 
 class MapRelatedTweetsStore implements IRelatedTweetsStore {

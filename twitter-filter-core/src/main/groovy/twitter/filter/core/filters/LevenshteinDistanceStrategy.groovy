@@ -4,7 +4,7 @@ import twitter.filter.core.Tweet
 import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.util.LevenshteinDistance
 
-class LevenshteinDistanceStrategy implements FilterStrategy {
+class LevenshteinDistanceStrategy implements DuplicateStrategy {
     public static int LEVENSHTEIN_SIMILARITY = 28
 
     private ITweetStore tweetStore
@@ -15,11 +15,11 @@ class LevenshteinDistanceStrategy implements FilterStrategy {
 
     /**
      * @param tweet
-     * @return true in case the consumer already contains
-     *         a similar tweet with a LevenshteinDistance < LEVENSHTEIN_SIMILARITY% of the tweets length.
+     * @return the original tweet, to which the checked tweet
+     *         has a LevenshteinDistance < LEVENSHTEIN_SIMILARITY% of the tweet's length.
      */
     @Override
-    def apply(Tweet tweet) {
+    Tweet apply(Tweet tweet) {
         def storedTweets = tweetStore.storedTweets
         def storedTweetsSize = storedTweets.size()
 
@@ -28,10 +28,10 @@ class LevenshteinDistanceStrategy implements FilterStrategy {
             def distance = LevenshteinDistance.computeDistance(storedTweets[i].text, tweet.text)
 
             if (distance * 100.0 < LEVENSHTEIN_SIMILARITY * length) {
-                return true
+                return storedTweets[i]
             }
         }
 
-        false
+        null
     }
 }

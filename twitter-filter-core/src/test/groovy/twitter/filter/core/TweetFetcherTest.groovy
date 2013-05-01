@@ -4,9 +4,16 @@ import org.junit.Before
 import org.junit.Test
 
 import twitter.filter.core.filters.BlacklistedUserStrategy
+import twitter.filter.core.filters.DuplicateTweetStrategy;
 import twitter.filter.core.filters.DuplicateUrlStrategy
 import twitter.filter.core.filters.LevenshteinDistanceStrategy
+import twitter.filter.core.model.IProgressReporter;
+import twitter.filter.core.model.IRelatedTweetsStore
+import twitter.filter.core.model.ITweetStore
 import twitter.filter.core.model.ListTweetStore
+import twitter.filter.core.model.RedisProgressReporter;
+import twitter.filter.core.model.RedisRelatedTweetsStore
+import twitter.filter.core.model.RedisTweetStore
 import twitter.filter.core.model.RedisUrlCache
 import twitter.filter.core.view.TweetPrinter
 import redis.clients.jedis.Jedis
@@ -47,30 +54,39 @@ class TweetFetcherTest {
         def query = "#hadoop"
         def page = 1
         def results = 100
+        def threads = 10
 
         TweetFetcher fetcher = new TweetFetcher(query, page, results)
         def tweets = fetcher.getTweets()
 
-        def tweetStore = new ListTweetStore()
         def jedis = new Jedis("localhost")
         jedis.select(1)
 
         def urlCache = new RedisUrlCache(jedis)
-        def threads = 10
 
         // when
+        ITweetStore tweetStore = new RedisTweetStore(jedis, query, urlCache)
+        IRelatedTweetsStore relatedTweetStore = new RedisRelatedTweetsStore(jedis, query)
+
         def filterStrategies = [
-            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC']),
-            new DuplicateUrlStrategy(tweetStore, urlCache),
-            // new DuplicateTweetStrategy(tweetStore),
-            new LevenshteinDistanceStrategy(tweetStore)
+            new BlacklistedUserStrategy(['d8Pit', 'HBaselog', 'HatzolahNYC', 'ShomrimHatzny']),
         ]
 
-        TweetConsumer consumer = new TweetConsumer()
-                .withTweetStore(tweetStore)
-                .withUrlCache(urlCache)
-                .withThreads(threads)
-                .withFilterStrategies(filterStrategies)
+        def duplicateStrategies = [
+            new DuplicateUrlStrategy(tweetStore, urlCache),
+            new DuplicateTweetStrategy(tweetStore)
+        ]
+
+        IProgressReporter progressReporter = new RedisProgressReporter(jedis, query)
+
+        RelatedTweetConsumer consumer = new RelatedTweetConsumer()
+                                                    .withUrlCache(urlCache)
+                                                    .withThreads(threads)
+                                                    .withTweetStore(tweetStore)
+                                                    .withRelatedTweetStore(relatedTweetStore)
+                                                    .withFilterStrategies(filterStrategies)
+                                                    .withDuplicateStrategies(duplicateStrategies)
+                                                    .withProgressReporter(progressReporter)
 
         consumer.consume(tweets)
 

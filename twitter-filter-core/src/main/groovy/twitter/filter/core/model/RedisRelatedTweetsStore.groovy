@@ -1,12 +1,10 @@
 package twitter.filter.core.model
 
-import groovy.util.logging.Log4j;
+import groovy.util.logging.Log4j
 
-import java.util.Collection;
-
-import redis.clients.jedis.Jedis;
-import twitter.filter.core.Tweet;
-import twitter.filter.core.TweetFactory;
+import redis.clients.jedis.Jedis
+import twitter.filter.core.Tweet
+import twitter.filter.core.TweetFactory
 
 @Log4j("log")
 public class RedisRelatedTweetsStore implements IRelatedTweetsStore {
