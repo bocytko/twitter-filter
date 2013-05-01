@@ -33,7 +33,7 @@ grails.project.dependency.resolution = {
 
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        compile 'twitter.filter:twitter-filter-core:0.6.2'
+        compile 'twitter.filter:twitter-filter-core:0.6.4.1'
     }
 
     plugins {

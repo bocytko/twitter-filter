@@ -9,7 +9,7 @@ import redis.clients.jedis.Jedis
 import twitter.filter.core.Tweet
 import twitter.filter.core.TweetFactory;
 
-class RedisRelatedTweetsTest {
+class RedisRelatedTweetsStoreTest {
     private static final String HOST = "localhost"
     private static Jedis jedis
 
@@ -61,6 +61,18 @@ class RedisRelatedTweetsTest {
     }
 
     @Test
+    void canClearRelatedTweetsStore() {
+        Tweet tweet = TweetFactory.createFromText("tweet")
+        Tweet first = TweetFactory.createFromText("1. related")
+        relatedTweets.add(tweet, first)
+
+        relatedTweets.clear()
+
+        def result = relatedTweets.getRelatedTweets(tweet) as List
+        assert result.isEmpty()
+    }
+
+    @Test
     void canStoreAListOfRelatedTweets() {
         Tweet tweet = TweetFactory.createFromText("tweet")
         Tweet first = TweetFactory.createFromText("1. related")
@@ -70,5 +82,16 @@ class RedisRelatedTweetsTest {
 
         def result = relatedTweets.getRelatedTweets(tweet) as List
         assert [first, second] == result
+    }
+
+    @Test
+    void shouldAddOnlyUniqueRelatedTweets() {
+        Tweet tweet = TweetFactory.createFromText("tweet")
+        Tweet first = TweetFactory.createFromText("1. related")
+
+        relatedTweets.add(tweet, [first, first])
+
+        def result = relatedTweets.getRelatedTweets(tweet) as List
+        assert [first] == result
     }
 }

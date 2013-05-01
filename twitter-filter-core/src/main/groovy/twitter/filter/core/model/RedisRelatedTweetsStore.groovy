@@ -24,7 +24,7 @@ public class RedisRelatedTweetsStore implements IRelatedTweetsStore {
 
     @Override
     def add(Tweet tweet, Tweet relatedTweet) {
-        jedis.rpush(getKey(tweet), relatedTweet.toJson())
+        jedis.sadd(getKey(tweet), relatedTweet.toJson())
     }
 
     @Override
@@ -34,7 +34,7 @@ public class RedisRelatedTweetsStore implements IRelatedTweetsStore {
 
     @Override
     def getRelatedTweets(Tweet tweet) {
-        def relatedTweets = jedis.lrange(getKey(tweet), 0, -1)
+        def relatedTweets = jedis.smembers(getKey(tweet))
 
         relatedTweets.collect { TweetFactory.createFromJson(it) }
     }
@@ -42,7 +42,10 @@ public class RedisRelatedTweetsStore implements IRelatedTweetsStore {
     @Override
     void clear() {
         Set<String> keys = jedis.keys(tweetsKeyPrefix + "*")
-        keys.each { jedis.del(it) }
+        keys.each { def key ->
+            def elems = jedis.scard(key)
+            elems.times() { jedis.spop(key) }
+        }
     }
 
     private def getKey(Tweet tweet) {
