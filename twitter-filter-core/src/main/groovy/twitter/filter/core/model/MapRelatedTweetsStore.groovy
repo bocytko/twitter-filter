@@ -7,19 +7,19 @@ class MapRelatedTweetsStore implements IRelatedTweetsStore {
 
     @Override
     def add(Tweet tweet, Collection related) {
-        createEmptyListForNewTweet(tweet)
+        addEmptyListForNewTweet(tweet)
 
         relatedTweets[tweet].addAll(related)
     }
 
     @Override
     def add(Tweet tweet, Tweet relatedTweet) {
-        createEmptyListForNewTweet(tweet)
+        addEmptyListForNewTweet(tweet)
 
         relatedTweets[tweet] << relatedTweet
     }
 
-    private void createEmptyListForNewTweet(Tweet tweet) {
+    private void addEmptyListForNewTweet(Tweet tweet) {
         if (!relatedTweets.containsKey(tweet)) {
             relatedTweets[tweet] = []
         }

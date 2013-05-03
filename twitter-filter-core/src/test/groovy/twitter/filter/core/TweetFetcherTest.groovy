@@ -4,14 +4,12 @@ import org.junit.Before
 import org.junit.Test
 
 import twitter.filter.core.filters.BlacklistedUserStrategy
-import twitter.filter.core.filters.DuplicateTweetStrategy;
+import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
-import twitter.filter.core.filters.LevenshteinDistanceStrategy
-import twitter.filter.core.model.IProgressReporter;
+import twitter.filter.core.model.IProgressReporter
 import twitter.filter.core.model.IRelatedTweetsStore
 import twitter.filter.core.model.ITweetStore
-import twitter.filter.core.model.ListTweetStore
-import twitter.filter.core.model.RedisProgressReporter;
+import twitter.filter.core.model.RedisProgressReporter
 import twitter.filter.core.model.RedisRelatedTweetsStore
 import twitter.filter.core.model.RedisTweetStore
 import twitter.filter.core.model.RedisUrlCache

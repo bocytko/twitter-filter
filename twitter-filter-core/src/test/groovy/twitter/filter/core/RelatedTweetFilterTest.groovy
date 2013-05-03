@@ -7,7 +7,6 @@ import org.junit.Test
 import twitter.filter.core.filters.BlacklistedUserStrategy
 import twitter.filter.core.filters.DuplicateTweetStrategy
 import twitter.filter.core.filters.DuplicateUrlStrategy
-import twitter.filter.core.filters.LevenshteinDistanceStrategy
 import twitter.filter.core.model.IProgressReporter
 import twitter.filter.core.model.IRelatedTweetsStore
 import twitter.filter.core.model.ITweetStore
